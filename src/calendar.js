@@ -10,35 +10,36 @@
 
 angular.module('ui.calendar', [])
 .constant('uiCalendarConfig', {})
-.value('calendar',{
-  _calendar:null,//this will become the fullcalendar object when loaded
-  _call:function(call,args){//interface to fullcalendars functions
-    return this._calendar.fullCalendar(call,args);
-  },
-  refetchEvents:function(){//refetchEvents... this way an interface can be made to all functionality and add more controll.
-    return this._call('refetchEvents');
-  },
-  init:function(options){//the creation of the fullcalendar.
-    return this._call(options);
-  },
-  fullCalendar:function(call,args){//backwards compatibility
-    return this._call(call,args);
-  }
+.factory('Calendar',function(){
+  return function(elem){
+    var calendar = elem;//this will become the fullcalendar object when loaded
+    var call = function(call,args){//interface to fullcalendars functions
+      return calendar.fullCalendar(call,args);
+    };
+    this.refetchEvents = function(){//refetchEvents... this way an interface can be made to all functionality and add more controll.
+      return call('refetchEvents');
+    };
+    this.init = function(options){//the creation of the fullcalendar.
+      return call(options);
+    };
+    this.fullCalendar = function(call,args){//backwards compatibility
+      return call(call,args);
+    };
+  };
 })
-.directive('uiCalendar', ['uiCalendarConfig', 'calendar' , '$parse', function(uiCalendarConfig,calendar) {
+.directive('uiCalendar', ['uiCalendarConfig', 'Calendar' , '$parse', function(uiCalendarConfig,Calendar) {
   uiCalendarConfig = uiCalendarConfig || {};
   //returns calendar
   return {
     require: 'ngModel',
     scope: {calendar:'=',ngModel:'=',config:'='},
     restrict: 'A',
-    controller:function($scope,$element,calendar){
-      $scope.calendar = calendar;
+    controller:function($scope,$element){
     },
     link: function(scope, elm, attrs,calCtrl) {
       var sources = scope.ngModel;//scope.$eval(attrs.ngModel);
       scope.destroy = function(){
-        scope.calendar._calendar = elm.html('');
+        scope.calendar = new Calendar(elm.html(''));
       };
       scope.destroy();
       //scope.calendar = elm.html('');
