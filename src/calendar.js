@@ -15,7 +15,7 @@ angular.module('ui.calendar', [])
   //returns calendar
   return {
     require: 'ngModel',
-    scope: {calendar:'=',ngModel:'=',config:'='},
+    scope: {calendar:'=',ngModel:'='},
     restrict: 'A',
     controller:function($scope,$element){
       
@@ -47,7 +47,7 @@ angular.module('ui.calendar', [])
         var options = { eventSources: sources };
         // not sure which would be more convenient
         //angular.extend(options, uiCalendarConfig, attrs.uiCalendar ? attrs.uiCalendar : {});
-        angular.extend(options, uiCalendarConfig, scope.config ? scope.config : {});
+        angular.extend(options, uiCalendarConfig, attrs.uiCalendar ? scope.$parent.$eval(attrs.uiCalendar) : {});
         scope.calendar.fullCalendar(options);
       };
       scope.init();
