@@ -16,6 +16,7 @@ angular.module('ui.calendar', [])
     var call = function(call,args){//interface to fullcalendars functions
       return calendar.fullCalendar(call,args);
     };
+    this.test = 'works';
     this.refetchEvents = function(){//refetchEvents... this way an interface can be made to all functionality and add more controll.
       return call('refetchEvents');
     };
@@ -32,14 +33,18 @@ angular.module('ui.calendar', [])
   //returns calendar
   return {
     require: 'ngModel',
-    scope: {calendar:'=',ngModel:'=',config:'='},
+    scope: {ngModel:'=',config:'='},
     restrict: 'A',
     controller:function($scope,$element){
     },
     link: function(scope, elm, attrs,calCtrl) {
       var sources = scope.ngModel;//scope.$eval(attrs.ngModel);
       scope.destroy = function(){
-        scope.calendar = new Calendar(elm.html(''));
+        if(attrs.calendar){
+          scope.calendar = scope.$parent[attrs.calendar] =  new Calendar(elm.html(''));
+        }else{
+          scope.calendar = new Calendar(elm.html(''));
+        }
       };
       scope.destroy();
       //scope.calendar = elm.html('');
