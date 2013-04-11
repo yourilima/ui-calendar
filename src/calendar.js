@@ -10,20 +10,35 @@
 
 angular.module('ui.calendar', [])
 .constant('uiCalendarConfig', {})
-.directive('uiCalendar', ['uiCalendarConfig', '$parse', function(uiCalendarConfig) {
+.value('calendar',{
+  _calendar:null,//this will become the fullcalendar object when loaded
+  _call:function(call,args){//interface to fullcalendars functions
+    return this._calendar.fullCalendar(call,args);
+  },
+  refetchEvents:function(){//refetchEvents... this way an interface can be made to all functionality and add more controll.
+    return this._call('refetchEvents');
+  },
+  init:function(options){//the creation of the fullcalendar.
+    return this._call(options);
+  },
+  fullCalendar:function(call,args){//backwards compatibility
+    return this._call(call,args);
+  }
+})
+.directive('uiCalendar', ['uiCalendarConfig', 'calendar' , '$parse', function(uiCalendarConfig,calendar) {
   uiCalendarConfig = uiCalendarConfig || {};
   //returns calendar
   return {
     require: 'ngModel',
-    scope: {calendar:'=',ngModel:'='},
+    scope: {calendar:'=',ngModel:'=',config:'='},
     restrict: 'A',
-    controller:function($scope,$element){
-      
+    controller:function($scope,$element,calendar){
+      $scope.calendar = calendar;
     },
     link: function(scope, elm, attrs,calCtrl) {
       var sources = scope.ngModel;//scope.$eval(attrs.ngModel);
       scope.destroy = function(){
-        scope.calendar = elm.html('');
+        scope.calendar._calendar = elm.html('');
       };
       scope.destroy();
       //scope.calendar = elm.html('');
@@ -46,9 +61,9 @@ angular.module('ui.calendar', [])
       scope.init = function(){
         var options = { eventSources: sources };
         // not sure which would be more convenient
-        //angular.extend(options, uiCalendarConfig, attrs.uiCalendar ? attrs.uiCalendar : {});
+        //angular.extend(options, uiCalendarConfig, scope.config ? scope.config : {});
         angular.extend(options, uiCalendarConfig, attrs.uiCalendar ? scope.$parent.$eval(attrs.uiCalendar) : {});
-        scope.calendar.fullCalendar(options);
+        scope.calendar.init(options);
       };
       scope.init();
       // Track changes in array by assigning numeric ids to each element and watching the scope for changes in those ids
@@ -112,13 +127,13 @@ angular.module('ui.calendar', [])
       var sourcesTracker = changeTracker(sources);
       sourcesTracker.subscribe(scope);
       sourcesTracker.onAdded = function(source) {
-        scope.calendar.fullCalendar('addEventSource', source);
+        scope.calendar.addEventSource(source);
       };
       sourcesTracker.onRemoved = function(source) {
-        scope.calendar.fullCalendar('removeEventSource', source);
+        scope.calendar.removeEventSource(source);
       };
       scope.$watch(eventsFingerprint, function() {
-        scope.calendar.fullCalendar('refetchEvents');
+        scope.calendar.refetchEvents();
       });
     }
   };
